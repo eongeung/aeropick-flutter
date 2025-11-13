@@ -1,0 +1,171 @@
+@startuml
+'*********************************************************
+'   항공 + QR 스탬프 + 가차(테마 1/2) 통합 ERD
+'*********************************************************
+
+'---------------- USER ----------------
+entity USER {
+  * user_id : INT <<PK>>
+  --
+  email            : VARCHAR(255)
+  password_hash    : VARCHAR(255)
+  user_name        : VARCHAR(100)
+  phone            : VARCHAR(20)
+  birth_date       : DATE
+  created_at       : DATETIME
+  updated_at       : DATETIME
+  status           : VARCHAR(20)
+  stamp_points     : INT
+  gacha_token_cnt  : INT
+}
+
+'---------------- FLIGHT ----------------
+entity FLIGHT {
+  * flight_id : INT <<PK>>
+  --
+  airline_code            : VARCHAR(10)
+  flight_number           : VARCHAR(20)
+  departure_airport_code  : VARCHAR(10)
+  arrival_airport_code    : VARCHAR(10)
+  departure_datetime      : DATETIME
+  arrival_datetime        : DATETIME
+  flight_status           : VARCHAR(20)
+  aircraft_type           : VARCHAR(50)
+  created_at              : DATETIME
+}
+
+'---------------- RESERVATION ----------------
+entity RESERVATION {
+  * reservation_id : INT <<PK>>
+  --
+  fk_user_id         : INT
+  pnr_code           : VARCHAR(20)
+  reservation_status : VARCHAR(20)
+  total_amount       : DECIMAL(10,2)
+  currency           : VARCHAR(10)
+  created_at         : DATETIME
+  updated_at         : DATETIME
+}
+
+'---------------- PASSENGER ----------------
+entity PASSENGER {
+  * passenger_id : INT <<PK>>
+  --
+  fk_reservation_id : INT
+  passenger_name    : VARCHAR(100)
+  birth_date        : DATE
+  gender            : VARCHAR(10)
+  nationality       : VARCHAR(50)
+}
+
+'---------------- TICKET ----------------
+entity TICKET {
+  * ticket_id : INT <<PK>>
+  --
+  fk_passenger_id : INT
+  fk_flight_id    : INT
+  seat_no         : VARCHAR(10)
+  ticket_status   : VARCHAR(20)
+  issued_at       : DATETIME
+}
+
+'---------------- PAYMENT ----------------
+entity PAYMENT {
+  * payment_id : INT <<PK>>
+  --
+  fk_reservation_id : INT
+  payment_method    : VARCHAR(30)
+  amount            : DECIMAL(10,2)
+  currency          : VARCHAR(10)
+  payment_status    : VARCHAR(20)
+  paid_at           : DATETIME
+}
+
+'---------------- CHECKIN & BOARDING PASS ----------------
+entity CHECKIN {
+  * checkin_id : INT <<PK>>
+  --
+  fk_ticket_id     : INT
+  checkin_time     : DATETIME
+  checkin_channel  : VARCHAR(20)
+  seat_no          : VARCHAR(10)
+}
+
+entity BOARDING_PASS {
+  * boarding_pass_id : INT <<PK>>
+  --
+  fk_checkin_id : INT
+  qr_code_value : VARCHAR(255)
+  issued_at     : DATETIME
+}
+
+'---------------- NOTIFICATION ----------------
+entity NOTIFICATION {
+  * notification_id : INT <<PK>>
+  --
+  fk_user_id          : INT
+  notification_type   : VARCHAR(30)
+  notification_title  : VARCHAR(200)
+  notification_msg    : TEXT
+  is_read             : BOOLEAN
+  created_at          : DATETIME
+}
+
+'---------------- QR 스탬프 (단순형) ----------------
+entity STAMP_LOCATION {
+  * stamp_location_id : INT <<PK>>
+  --
+  location_name  : VARCHAR(100)
+  location_desc  : TEXT
+  qr_code_value  : VARCHAR(255)
+}
+
+entity USER_STAMP {
+  * user_stamp_id : INT <<PK>>
+  --
+  fk_user_id           : INT
+  fk_stamp_location_id : INT
+  scanned_at           : DATETIME
+}
+
+'---------------- 가차 (머신 1개, 테마 1/2) ----------------
+entity GACHA_ITEM {
+  * item_id : INT <<PK>>
+  --
+  theme_no   : INT          '1번/2번 테마
+  item_name  : VARCHAR(100)
+  stock_qty  : INT
+  image_url  : VARCHAR(255)
+}
+
+entity GACHA_DRAW {
+  * draw_id : INT <<PK>>
+  --
+  fk_user_id : INT
+  fk_item_id : INT
+  draw_time  : DATETIME
+  cost_token : INT
+}
+
+'*********************************************************
+'   RELATION 정의
+'*********************************************************
+
+USER ||--o{ RESERVATION
+RESERVATION ||--o{ PASSENGER
+PASSENGER ||--o{ TICKET
+FLIGHT ||--o{ TICKET
+RESERVATION ||--o{ PAYMENT
+
+TICKET ||--o{ CHECKIN
+CHECKIN ||--o{ BOARDING_PASS
+
+USER ||--o{ NOTIFICATION
+
+STAMP_LOCATION ||--o{ USER_STAMP
+USER ||--o{ USER_STAMP
+
+GACHA_ITEM ||--o{ GACHA_DRAW
+USER ||--o{ GACHA_DRAW
+
+@enduml
